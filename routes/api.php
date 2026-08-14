@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\SubscriptionTierController;
+use App\Http\Controllers\Api\TreasureController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -25,6 +26,15 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/{subscriptionTier}', [SubscriptionTierController::class, 'update']);
                 Route::delete('/{subscriptionTier}', [SubscriptionTierController::class, 'destroy']);
                 Route::patch('/{subscriptionTier}/toggle-status', [SubscriptionTierController::class, 'toggleStatus']);
+            });
+
+            Route::prefix('admin/treasures')->group(function () {
+                Route::get('/', [TreasureController::class, 'index']);
+                Route::post('/', [TreasureController::class, 'store']);
+                Route::get('/{treasure}', [TreasureController::class, 'show']);
+                Route::put('/{treasure}', [TreasureController::class, 'update']);
+                Route::delete('/{treasure}', [TreasureController::class, 'destroy']);
+                Route::patch('/{treasure}/toggle-status', [TreasureController::class, 'toggleStatus']);
             });
         });
     });
