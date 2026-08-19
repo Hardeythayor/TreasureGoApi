@@ -1,8 +1,10 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\RewardController;
 use App\Http\Controllers\Api\SubscriptionTierController;
 use App\Http\Controllers\Api\TreasureController;
+use App\Http\Controllers\Api\TreasureHuntController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +18,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('verified')->group(function () {
         Route::get('/user', [AuthController::class, 'me']);
+
+        Route::prefix('treasures/{treasure}')->group(function () {
+            Route::post('/start-hunt', [TreasureHuntController::class, 'start']);
+            Route::post('/find', [TreasureHuntController::class, 'find']);
+        });
 
         Route::middleware('role:admin')->group(function () {
             Route::get('/admin/ping', fn () => response()->json(['message' => 'pong, admin']));
@@ -44,6 +51,13 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/{user}', [UserController::class, 'update']);
                 Route::delete('/{user}', [UserController::class, 'destroy']);
                 Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus']);
+            });
+
+            Route::post('admin/rewards', [RewardController::class, 'send']);
+
+            Route::prefix('admin/treasure-hunts')->group(function () {
+                Route::get('/', [TreasureHuntController::class, 'index']);
+                Route::get('/analytics', [TreasureHuntController::class, 'analytics']);
             });
         });
     });

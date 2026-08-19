@@ -47,6 +47,7 @@ class SubscriptionTierController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
             'amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'reward_amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
             'validity' => ['required', 'integer', 'min:1'],
             'type' => ['sometimes', 'string', 'in:free,premium'],
             'status' => ['sometimes', 'string', 'in:active,inactive'],
@@ -75,6 +76,7 @@ class SubscriptionTierController extends Controller
         $validator = Validator::make($request->all(), [
             'name' => ['sometimes', 'string', 'max:255'],
             'amount' => ['sometimes', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'reward_amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
             'validity' => ['sometimes', 'integer', 'min:1'],
             'type' => ['sometimes', 'string', 'in:free,premium'],
             'status' => ['sometimes', 'string', 'in:active,inactive'],
