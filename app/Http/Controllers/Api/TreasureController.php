@@ -13,7 +13,7 @@ class TreasureController extends Controller
     public function index()
     {
         return response()->json([
-            'treasures' => Treasure::latest()->get(),
+            'data' => Treasure::latest()->get(),
         ]);
     }
 
@@ -21,6 +21,7 @@ class TreasureController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
+            'region' => ['required', 'string', 'max:255'],
             'icon' => ['nullable', 'image', 'max:2048'],
             'subscription_tier_id' => ['required', 'integer', 'exists:subscription_tiers,id'],
             'location' => ['required', 'array'],
@@ -57,6 +58,7 @@ class TreasureController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['sometimes', 'string', 'max:255'],
+            'region' => ['sometimes', 'string', 'max:255'],
             'icon' => ['nullable', 'image', 'max:2048'],
             'subscription_tier_id' => ['sometimes', 'integer', 'exists:subscription_tiers,id'],
             'location' => ['sometimes', 'array'],

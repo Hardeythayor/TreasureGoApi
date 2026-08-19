@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['name', 'icon', 'subscription_tier_id', 'location', 'status'])]
+#[Fillable(['name', 'region', 'icon', 'subscription_tier_id', 'location', 'status'])]
 class Treasure extends Model
 {
     /**

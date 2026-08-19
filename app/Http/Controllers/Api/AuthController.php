@@ -9,6 +9,7 @@ use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
 {
@@ -16,8 +17,14 @@ class AuthController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
-            'username' => ['required', 'string', 'max:255', 'alpha_dash', 'unique:users,username'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
+            'username' => [
+                'required', 'string', 'max:255', 'alpha_dash',
+                Rule::unique('users', 'username')->whereNull('deleted_at'),
+            ],
+            'email' => [
+                'required', 'string', 'email', 'max:255',
+                Rule::unique('users', 'email')->whereNull('deleted_at'),
+            ],
             'country' => ['required', 'string', 'max:255'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -135,6 +142,10 @@ class AuthController extends Controller
 
         if (! $user || ! Hash::check($request->password, $user->password)) {
             throw new AuthenticationException('The provided credentials are incorrect.');
+        }
+
+        if ($user->status !== 'active') {
+            return response()->json(['message' => 'Your account has been deactivated. Please contact support.'], 403);
         }
 
         $token = $user->createToken('auth_token')->plainTextToken;
