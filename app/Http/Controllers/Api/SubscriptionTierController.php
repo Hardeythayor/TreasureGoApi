@@ -9,6 +9,16 @@ use Illuminate\Support\Facades\Validator;
 
 class SubscriptionTierController extends Controller
 {
+    public function active()
+    {
+        return response()->json([
+            'subscription_tiers' => SubscriptionTier::where('status', 'active')
+                ->select(['id', 'name', 'amount', 'validity', 'type', 'reward_amount'])
+                ->latest()
+                ->get(),
+        ]);
+    }
+
     public function index(Request $request)
     {
         $validator = Validator::make($request->query(), [

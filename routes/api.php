@@ -3,9 +3,11 @@
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\RewardController;
 use App\Http\Controllers\Api\SubscriptionTierController;
+use App\Http\Controllers\Api\SubscriptionTierTransactionController;
 use App\Http\Controllers\Api\TreasureController;
 use App\Http\Controllers\Api\TreasureHuntController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\UserTierSubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
@@ -18,6 +20,13 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::middleware('verified')->group(function () {
         Route::get('/user', [AuthController::class, 'me']);
+
+        Route::get('/subscription-tiers', [SubscriptionTierController::class, 'active']);
+
+        Route::post('/subscriptions', [UserTierSubscriptionController::class, 'subscribe']);
+        Route::get('/subscriptions/current', [UserTierSubscriptionController::class, 'current']);
+        Route::post('/subscriptions/{subscription}/transactions', [SubscriptionTierTransactionController::class, 'store']);
+        Route::post('/subscriptions/transactions/verify', [SubscriptionTierTransactionController::class, 'verify']);
 
         Route::prefix('treasures/{treasure}')->group(function () {
             Route::post('/start-hunt', [TreasureHuntController::class, 'start']);
