@@ -9,11 +9,16 @@ use Illuminate\Support\Facades\Validator;
 
 class SubscriptionTierController extends Controller
 {
-    public function active()
+    public function active(Request $request)
     {
         return response()->json([
             'subscription_tiers' => SubscriptionTier::where('status', 'active')
                 ->select(['id', 'name', 'amount', 'validity', 'type', 'reward_amount'])
+                ->with(['currentUserSubscription' => function ($query) use ($request) {
+                    $query->where('user_id', $request->user()->id)
+                        // ->where('is_current', 'yes')
+                        ->where('status', 'active');
+                }])
                 ->latest()
                 ->get(),
         ]);

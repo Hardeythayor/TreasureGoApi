@@ -18,10 +18,12 @@ class SubscriptionTierTransactionController extends Controller
             return response()->json(['message' => 'This subscription does not belong to you.'], 403);
         }
 
+        if ($subscription->transactions()->where('status', 'approved')->exists()) {
+            return response()->json(['message' => 'This subscription has already been paid for.'], 422);
+        }
+
         $validator = Validator::make($request->all(), [
-            'transaction_reference' => ['required', 'string', 'max:255', 'unique:subscription_tier_transactions,transaction_reference'],
             'payment_type' => ['nullable', 'string', 'max:255'],
-            'amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
         ]);
 
         if ($validator->fails()) {
@@ -30,9 +32,9 @@ class SubscriptionTierTransactionController extends Controller
 
         $transaction = SubscriptionTierTransaction::create([
             'subscription_id' => $subscription->id,
-            'transaction_reference' => $request->transaction_reference,
+            'transaction_reference' => SubscriptionTierTransaction::generateReference(),
             'payment_type' => $request->payment_type,
-            'amount' => $request->amount,
+            'amount' => $subscription->subscriptionTier->amount,
         ]);
 
         return response()->json([
@@ -92,7 +94,7 @@ class SubscriptionTierTransactionController extends Controller
             ]);
 
             if ($isSuccessful) {
-                $transaction->subscription()->update(['status' => 'active']);
+                $transaction->subscription()->update(['status' => 'active', 'subscribed_on' => now()]);
             }
         });
 

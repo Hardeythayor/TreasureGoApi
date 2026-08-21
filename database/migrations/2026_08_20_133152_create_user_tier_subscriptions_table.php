@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('subscription_tier_id')->constrained();
             $table->enum('status', ['pending', 'active', 'expired'])->default('pending');
             $table->enum('is_current', ['yes', 'no'])->default('yes');
-            $table->dateTime('subscribed_on');
+            $table->dateTime('subscribed_on')->nullable();
             $table->timestamps();
         });
     }

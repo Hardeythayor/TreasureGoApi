@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\SubscriptionTier;
 use App\Models\Treasure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -14,6 +15,13 @@ class TreasureController extends Controller
     {
         return response()->json([
             'data' => Treasure::latest()->get(),
+        ]);
+    }
+
+    public function byTier(SubscriptionTier $subscriptionTier)
+    {
+        return response()->json([
+            'treasures' => Treasure::where('subscription_tier_id', $subscriptionTier->id)->latest()->get(),
         ]);
     }
 

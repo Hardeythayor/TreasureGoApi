@@ -22,6 +22,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/user', [AuthController::class, 'me']);
 
         Route::get('/subscription-tiers', [SubscriptionTierController::class, 'active']);
+        Route::get('/subscription-tiers/{subscriptionTier}/treasures', [TreasureController::class, 'byTier']);
 
         Route::post('/subscriptions', [UserTierSubscriptionController::class, 'subscribe']);
         Route::get('/subscriptions/current', [UserTierSubscriptionController::class, 'current']);
