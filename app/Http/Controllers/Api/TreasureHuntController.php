@@ -83,7 +83,7 @@ class TreasureHuntController extends Controller
         ]);
 
         return response()->json([
-            'treasure_hunt' => $hunt,
+            'treasure_hunt' => $hunt->load('treasure'),
         ], $hunt->wasRecentlyCreated ? 201 : 200);
     }
 
