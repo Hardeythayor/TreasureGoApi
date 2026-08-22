@@ -39,7 +39,7 @@ class UserController extends Controller
         }
 
         return response()->json([
-            'users' => $query->latest()->get()->map(fn (User $user) => $this->formatUser($user)),
+            'users' => $query->latest()->paginate(30)->through(fn (User $user) => $this->formatUser($user)),
         ]);
     }
 
