@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\MessageNotificationController;
+use App\Http\Controllers\Api\MessageRecipientController;
 use App\Http\Controllers\Api\RewardController;
 use App\Http\Controllers\Api\SubscriptionTierController;
 use App\Http\Controllers\Api\SubscriptionTierTransactionController;
@@ -32,6 +34,14 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::prefix('treasures/{treasure}')->group(function () {
             Route::post('/start-hunt', [TreasureHuntController::class, 'start']);
             Route::post('/find', [TreasureHuntController::class, 'find']);
+        });
+
+        Route::prefix('notifications')->group(function () {
+            Route::get('/', [MessageRecipientController::class, 'index']);
+            Route::patch('/read-all', [MessageRecipientController::class, 'markAllAsRead']);
+            Route::patch('/{notification}/read', [MessageRecipientController::class, 'markAsRead']);
+            Route::delete('/', [MessageRecipientController::class, 'deleteAll']);
+            Route::delete('/{notification}', [MessageRecipientController::class, 'destroy']);
         });
 
         Route::middleware('role:admin')->group(function () {
@@ -69,6 +79,8 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/', [TreasureHuntController::class, 'index']);
                 Route::get('/analytics', [TreasureHuntController::class, 'analytics']);
             });
+
+            Route::post('admin/messages', [MessageNotificationController::class, 'send']);
         });
     });
 });
