@@ -26,11 +26,23 @@ class MessageBroadcastNotification extends Notification implements ShouldQueue
 
     public function toMail(object $notifiable): MailMessage
     {
+        $message = $this->notification->message;
+
+        // The message may be plain text or HTML from a rich text editor (e.g.
+        // CKEditor). Laravel's default markdown mail template escapes all
+        // content, which would render CKEditor's HTML as literal tags rather
+        // than formatting — so plain text is escaped and line-break-safe here,
+        // while HTML is passed through untouched to a raw Blade view instead.
+        $isHtml = strip_tags($message) !== $message;
+        $body = $isHtml ? $message : nl2br(e($message));
+
         return (new MailMessage)
             ->subject($this->notification->title)
-            ->greeting("Hi {$notifiable->name},")
-            ->line($this->notification->message)
-            ->action('View', $this->notification->link)
-            ->line('Thank you for using '.config('app.name').'!');
+            ->view('emails.message-broadcast', [
+                'title' => $this->notification->title,
+                'greeting' => "Hi {$notifiable->name},",
+                'body' => $body,
+                'link' => $this->notification->link,
+            ]);
     }
 }

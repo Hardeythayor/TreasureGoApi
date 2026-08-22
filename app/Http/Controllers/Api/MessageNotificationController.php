@@ -14,6 +14,7 @@ class MessageNotificationController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'type' => ['required', 'string', 'in:all,tier,user'],
+            'message_type' => ['required', 'string', 'in:announcement,congratulatory,system'],
             'title' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string'],
             'subscription_tier_id' => ['required_if:type,tier', 'integer', 'exists:subscription_tiers,id'],
@@ -36,6 +37,7 @@ class MessageNotificationController extends Controller
 
         $notification = $broadcaster->send(
             type: $request->type,
+            messageType: $request->message_type,
             title: $request->title,
             message: $request->message,
             link: config('app.client_url'),

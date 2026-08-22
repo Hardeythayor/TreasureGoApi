@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['sender_id', 'type', 'title', 'message', 'recipients', 'recipient_count', 'link'])]
+#[Fillable(['sender_id', 'type', 'message_type', 'title', 'message', 'recipients', 'recipient_count', 'link'])]
 class MessageNotification extends Model
 {
     /**

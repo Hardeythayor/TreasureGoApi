@@ -22,6 +22,7 @@ class MessageBroadcastService
      */
     public function send(
         string $type,
+        string $messageType,
         string $title,
         string $message,
         string $link,
@@ -32,10 +33,11 @@ class MessageBroadcastService
             return null;
         }
 
-        $notification = DB::transaction(function () use ($type, $title, $message, $link, $recipientIds, $senderId) {
+        $notification = DB::transaction(function () use ($type, $messageType, $title, $message, $link, $recipientIds, $senderId) {
             $notification = MessageNotification::create([
                 'sender_id' => $senderId,
                 'type' => $type,
+                'message_type' => $messageType,
                 'title' => $title,
                 'message' => $message,
                 'recipients' => $recipientIds->values()->all(),

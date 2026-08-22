@@ -124,6 +124,7 @@ class TreasureHuntController extends Controller
 
         $broadcaster->send(
             type: 'tier',
+            messageType: 'treasure_found',
             title: 'Treasure Found',
             message: "{$treasure->name} has just been found by another hunter. Keep searching for the next one!",
             link: config('app.client_url')."/treasures/{$treasure->id}",
