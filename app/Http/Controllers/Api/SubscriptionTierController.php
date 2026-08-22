@@ -16,7 +16,7 @@ class SubscriptionTierController extends Controller
                 ->select(['id', 'name', 'amount', 'validity', 'type', 'reward_amount'])
                 ->with(['currentUserSubscription' => function ($query) use ($request) {
                     $query->where('user_id', $request->user()->id)
-                        // ->where('is_current', 'yes')
+                        ->where('is_current', 'yes')
                         ->where('status', 'active');
                 }])
                 ->latest()

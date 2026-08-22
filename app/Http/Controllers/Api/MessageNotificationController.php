@@ -2,18 +2,15 @@
 
 namespace App\Http\Controllers\Api;
 
-use App\Events\NewMessageNotification;
 use App\Http\Controllers\Controller;
-use App\Models\MessageNotification;
-use App\Models\MessageRecipient;
 use App\Models\User;
+use App\Services\MessageBroadcastService;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
 class MessageNotificationController extends Controller
 {
-    public function send(Request $request)
+    public function send(Request $request, MessageBroadcastService $broadcaster)
     {
         $validator = Validator::make($request->all(), [
             'type' => ['required', 'string', 'in:all,tier,user'],
@@ -38,42 +35,17 @@ class MessageNotificationController extends Controller
             'user' => collect([(int) $request->user_id]),
         };
 
-        if ($recipientIds->isEmpty()) {
+        $notification = $broadcaster->send(
+            type: $request->type,
+            title: $request->title,
+            message: $request->message,
+            link: $request->link,
+            recipientIds: $recipientIds,
+            senderId: $request->user()->id,
+        );
+
+        if (! $notification) {
             return response()->json(['message' => 'No matching recipients found.'], 422);
-        }
-
-        $notification = DB::transaction(function () use ($request, $recipientIds) {
-            $notification = MessageNotification::create([
-                'sender_id' => $request->user()->id,
-                'type' => $request->type,
-                'title' => $request->title,
-                'message' => $request->message,
-                'recipients' => $recipientIds->values()->all(),
-                'recipient_count' => $recipientIds->count(),
-                'link' => $request->link,
-            ]);
-
-            $rows = $recipientIds->map(fn ($id) => [
-                'message_id' => $notification->id,
-                'receiver_id' => $id,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ])->all();
-
-            MessageRecipient::insert($rows);
-
-            return $notification;
-        });
-
-        // Pusher's trigger API allows at most 100 channels per call, so large
-        // broadcasts (e.g. type=all) are split into chunks, each queued as its
-        // own event rather than blocking this request on many API calls.
-        foreach ($recipientIds->values()->chunk(100) as $chunk) {
-            try {
-                broadcast(new NewMessageNotification($notification, $chunk->all()));
-            } catch (\Throwable $e) {
-                report($e);
-            }
         }
 
         return response()->json([

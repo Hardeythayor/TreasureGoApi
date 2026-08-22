@@ -5,6 +5,8 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Treasure;
 use App\Models\TreasureHunt;
+use App\Models\User;
+use App\Services\MessageBroadcastService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
@@ -87,7 +89,7 @@ class TreasureHuntController extends Controller
         ], $hunt->wasRecentlyCreated ? 201 : 200);
     }
 
-    public function find(Request $request, Treasure $treasure)
+    public function find(Request $request, Treasure $treasure, MessageBroadcastService $broadcaster)
     {
         $hunt = TreasureHunt::where('user_id', $request->user()->id)
             ->where('treasure_id', $treasure->id)
@@ -113,6 +115,20 @@ class TreasureHuntController extends Controller
 
             $treasure->update(['status' => 'found']);
         });
+
+        $otherSubscriberIds = User::whereHas('subscriptions', function ($query) use ($treasure) {
+            $query->where('subscription_tier_id', $treasure->subscription_tier_id)
+                ->where('is_current', 'yes')
+                ->where('status', 'active');
+        })->where('id', '!=', $request->user()->id)->pluck('id');
+
+        $broadcaster->send(
+            type: 'tier',
+            title: 'Treasure Found',
+            message: "{$treasure->name} has just been found by another hunter. Keep searching for the next one!",
+            link: config('app.client_url')."/treasures/{$treasure->id}",
+            recipientIds: $otherSubscriberIds,
+        );
 
         return response()->json([
             'treasure_hunt' => $hunt->fresh(),
