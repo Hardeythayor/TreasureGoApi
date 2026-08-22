@@ -65,10 +65,15 @@ class MessageNotificationController extends Controller
             return $notification;
         });
 
-        try {
-            broadcast(new NewMessageNotification($notification, $recipientIds->values()->all()));
-        } catch (\Throwable $e) {
-            report($e);
+        // Pusher's trigger API allows at most 100 channels per call, so large
+        // broadcasts (e.g. type=all) are split into chunks, each queued as its
+        // own event rather than blocking this request on many API calls.
+        foreach ($recipientIds->values()->chunk(100) as $chunk) {
+            try {
+                broadcast(new NewMessageNotification($notification, $chunk->all()));
+            } catch (\Throwable $e) {
+                report($e);
+            }
         }
 
         return response()->json([
