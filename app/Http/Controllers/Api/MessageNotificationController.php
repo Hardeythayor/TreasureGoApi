@@ -16,7 +16,6 @@ class MessageNotificationController extends Controller
             'type' => ['required', 'string', 'in:all,tier,user'],
             'title' => ['required', 'string', 'max:255'],
             'message' => ['required', 'string'],
-            'link' => ['required', 'string'],
             'subscription_tier_id' => ['required_if:type,tier', 'integer', 'exists:subscription_tiers,id'],
             'user_id' => ['required_if:type,user', 'integer', 'exists:users,id'],
         ]);
@@ -39,7 +38,7 @@ class MessageNotificationController extends Controller
             type: $request->type,
             title: $request->title,
             message: $request->message,
-            link: $request->link,
+            link: config('app.client_url'),
             recipientIds: $recipientIds,
             senderId: $request->user()->id,
         );
