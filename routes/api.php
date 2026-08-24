@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\MessageNotificationController;
 use App\Http\Controllers\Api\MessageRecipientController;
 use App\Http\Controllers\Api\RewardController;
@@ -19,6 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
     Route::post('/email/resend', [AuthController::class, 'resendVerificationCode']);
+    Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::post('/contact-us', [ContactUsController::class, 'send']);
 
     Route::middleware('verified')->group(function () {
         Route::get('/user', [AuthController::class, 'me']);
@@ -30,6 +33,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/subscriptions/current', [UserTierSubscriptionController::class, 'current']);
         Route::post('/subscriptions/{subscription}/transactions', [SubscriptionTierTransactionController::class, 'store']);
         Route::post('/subscriptions/transactions/verify', [SubscriptionTierTransactionController::class, 'verify']);
+
+        Route::get('/treasure-hunts', [TreasureHuntController::class, 'mine']);
 
         Route::prefix('treasures/{treasure}')->group(function () {
             Route::post('/start-hunt', [TreasureHuntController::class, 'start']);

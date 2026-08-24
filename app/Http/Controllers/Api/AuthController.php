@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\TreasureHunt;
 use App\Models\User;
+use App\Models\UserTierSubscription;
 use App\Notifications\VerifyEmailCode;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
@@ -56,8 +58,61 @@ class AuthController extends Controller
 
     public function me(Request $request)
     {
+        $user = $request->user();
+        $data = $this->formatUser($user);
+
+        if ($user->hasRole('user')) {
+            $data['current_subscription'] = UserTierSubscription::where('user_id', $user->id)
+                ->where('is_current', 'yes')
+                ->where('status', 'active')
+                ->with('subscriptionTier')
+                ->first();
+
+            $data['total_treasures_found'] = TreasureHunt::where('user_id', $user->id)
+                ->where('status', 'found')
+                ->count();
+        }
+
         return response()->json([
-            'user' => $this->formatUser($request->user()),
+            'user' => $data,
+        ]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'name' => ['sometimes', 'string', 'max:255'],
+            'username' => [
+                'sometimes', 'string', 'max:255', 'alpha_dash',
+                Rule::unique('users', 'username')->ignore($user->id)->whereNull('deleted_at'),
+            ],
+            'email' => [
+                'sometimes', 'string', 'email', 'max:255',
+                Rule::unique('users', 'email')->ignore($user->id)->whereNull('deleted_at'),
+            ],
+            'country' => ['sometimes', 'string', 'max:255'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $emailChanged = $request->filled('email') && $request->email !== $user->email;
+
+        $user->update($validator->validated());
+
+        if ($emailChanged) {
+            $user->forceFill(['email_verified_at' => null])->save();
+            $this->sendVerificationCode($user);
+        }
+
+        return response()->json([
+            'message' => $emailChanged
+                ? 'Profile updated. Please verify your new email with the code we sent you.'
+                : 'Profile updated successfully.',
+            'user' => $this->formatUser($user),
         ]);
     }
 

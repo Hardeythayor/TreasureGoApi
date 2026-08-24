@@ -68,6 +68,27 @@ class TreasureHuntController extends Controller
         ]);
     }
 
+    public function mine(Request $request)
+    {
+        $validator = Validator::make($request->query(), [
+            'status' => ['sometimes', 'string', 'in:hidden,found'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $query = TreasureHunt::where('user_id', $request->user()->id)->with('treasure.subscriptionTier');
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        return response()->json([
+            'treasure_hunts' => $query->latest()->paginate(50),
+        ]);
+    }
+
     public function analytics()
     {
         return response()->json([
@@ -129,6 +150,17 @@ class TreasureHuntController extends Controller
             message: "{$treasure->name} has just been found by another hunter. Keep searching for the next one!",
             link: config('app.client_url')."/treasures/{$treasure->id}",
             recipientIds: $otherSubscriberIds,
+        );
+
+        $adminIds = User::whereHas('roles', fn ($query) => $query->where('name', 'admin'))->pluck('id');
+
+        $broadcaster->send(
+            type: 'admins',
+            messageType: 'treasure_found_alert',
+            title: 'Treasure Found',
+            message: "{$treasure->name} was found by {$request->user()->name}.",
+            link: config('app.client_url')."/treasures/{$treasure->id}",
+            recipientIds: $adminIds,
         );
 
         return response()->json([

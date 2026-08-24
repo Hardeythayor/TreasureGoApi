@@ -56,6 +56,8 @@ return [
 
     'client_url' => env('CLIENT_URL', 'http://localhost'),
 
+    'contact_email' => env('CONTACT_US_EMAIL', 'treasuregolive@gmail.com'),
+
     /*
     |--------------------------------------------------------------------------
     | Application Timezone

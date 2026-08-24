@@ -54,6 +54,15 @@ class UserTierSubscriptionController extends Controller
                 ]);
             }
 
+            if ($tier->type === 'free') {
+                $subscription->update([
+                    'status' => 'active',
+                    'subscribed_on' => now(),
+                ]);
+
+                return [$subscription, null];
+            }
+
             $transaction = SubscriptionTierTransaction::create([
                 'subscription_id' => $subscription->id,
                 'transaction_reference' => SubscriptionTierTransaction::generateReference(),
