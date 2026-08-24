@@ -137,6 +137,15 @@ class TreasureHuntController extends Controller
             $treasure->update(['status' => 'found']);
         });
 
+        $broadcaster->send(
+            type: 'user',
+            messageType: 'treasure_found_self',
+            title: 'You found it! 🏆',
+            message: "Congratulations on finding the {$treasure->name}. Reward instructions are on the way.",
+            link: config('app.client_url')."/treasures/{$treasure->id}",
+            recipientIds: collect([$request->user()->id]),
+        );
+
         $otherSubscriberIds = User::whereHas('subscriptions', function ($query) use ($treasure) {
             $query->where('subscription_tier_id', $treasure->subscription_tier_id)
                 ->where('is_current', 'yes')

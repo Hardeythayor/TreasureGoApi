@@ -7,13 +7,14 @@ use App\Models\Treasure;
 use App\Models\TreasureHunt;
 use App\Models\User;
 use App\Notifications\TreasureRewardNotification;
+use App\Services\MessageBroadcastService;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\Validator;
 
 class RewardController extends Controller
 {
-    public function send(Request $request)
+    public function send(Request $request, MessageBroadcastService $broadcaster)
     {
         $validator = Validator::make($request->all(), [
             'user_id' => ['required', 'integer', Rule::exists('users', 'id')->whereNull('deleted_at')],
@@ -51,6 +52,15 @@ class RewardController extends Controller
         ]);
 
         $user->notify(new TreasureRewardNotification($user, $treasure, $request->amazon_link));
+
+        $broadcaster->send(
+            type: 'user',
+            messageType: 'reward_delivered',
+            title: 'Reward delivered',
+            message: "Your \${$treasure->subscriptionTier->reward_amount} gift card for {$treasure->name} has been sent to your email.",
+            link: config('app.client_url')."/treasures/{$treasure->id}",
+            recipientIds: collect([$user->id]),
+        );
 
         return response()->json([
             'message' => 'Reward sent successfully.',
