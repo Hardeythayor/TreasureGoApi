@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\ContactUsController;
 use App\Http\Controllers\Api\MessageNotificationController;
 use App\Http\Controllers\Api\MessageRecipientController;
+use App\Http\Controllers\Api\PushNotificationController;
 use App\Http\Controllers\Api\RewardController;
 use App\Http\Controllers\Api\SubscriptionTierController;
 use App\Http\Controllers\Api\SubscriptionTierTransactionController;
@@ -40,6 +41,9 @@ Route::middleware('auth:sanctum')->group(function () {
             Route::post('/start-hunt', [TreasureHuntController::class, 'start']);
             Route::post('/find', [TreasureHuntController::class, 'find']);
         });
+
+        Route::get('/beams-token', [PushNotificationController::class, 'getBeamsToken']);
+        Route::delete('/beams-token', [PushNotificationController::class, 'removeBeamsToken']);
 
         Route::prefix('notifications')->group(function () {
             Route::get('/', [MessageRecipientController::class, 'index']);

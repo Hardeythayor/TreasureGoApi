@@ -45,6 +45,7 @@ class NewMessageNotification implements ShouldBroadcast
         return [
             'id' => $this->notification->id,
             'type' => $this->notification->type,
+            'message_type' => $this->notification->message_type,
             'title' => $this->notification->title,
             'message' => $this->notification->message,
             'link' => $this->notification->link,

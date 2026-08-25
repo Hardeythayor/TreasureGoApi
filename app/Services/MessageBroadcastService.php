@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Events\NewMessageNotification;
+use App\Jobs\SendPushNotification;
 use App\Models\MessageNotification;
 use App\Models\MessageRecipient;
 use App\Models\User;
@@ -15,8 +16,9 @@ class MessageBroadcastService
 {
     /**
      * Persist a notification for the given recipients, broadcast it in real
-     * time (chunked to stay under Pusher's 100-channel-per-call limit), and
-     * queue an email to each recipient.
+     * time over Pusher Channels and Pusher Beams (both chunked to stay under
+     * their respective per-call recipient limits), and queue an email to
+     * each recipient.
      *
      * Returns null (no-op) if there are no recipients to notify.
      */
@@ -57,9 +59,17 @@ class MessageBroadcastService
             return $notification;
         });
 
+        $pushBody = strip_tags($message);
+
         foreach ($recipientIds->values()->chunk(100) as $chunk) {
             try {
                 broadcast(new NewMessageNotification($notification, $chunk->all()));
+            } catch (\Throwable $e) {
+                report($e);
+            }
+
+            try {
+                SendPushNotification::dispatch($chunk->all(), $title, $pushBody, $link);
             } catch (\Throwable $e) {
                 report($e);
             }
