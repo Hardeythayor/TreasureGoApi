@@ -159,6 +159,7 @@ class TreasureHuntController extends Controller
             message: "{$treasure->name} has just been found by another hunter. Keep searching for the next one!",
             link: config('app.client_url').'/messages',
             recipientIds: $otherSubscriberIds,
+            subscriptionTierId: $treasure->subscription_tier_id,
         );
 
         $adminIds = User::whereHas('roles', fn ($query) => $query->where('name', 'admin'))->pluck('id');

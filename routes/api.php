@@ -89,6 +89,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::get('/analytics', [TreasureHuntController::class, 'analytics']);
             });
 
+            Route::get('admin/messages', [MessageNotificationController::class, 'index']);
             Route::post('admin/messages', [MessageNotificationController::class, 'send']);
         });
     });

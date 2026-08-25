@@ -30,16 +30,18 @@ class MessageBroadcastService
         string $link,
         Collection $recipientIds,
         ?int $senderId = null,
+        ?int $subscriptionTierId = null,
     ): ?MessageNotification {
         if ($recipientIds->isEmpty()) {
             return null;
         }
 
-        $notification = DB::transaction(function () use ($type, $messageType, $title, $message, $link, $recipientIds, $senderId) {
+        $notification = DB::transaction(function () use ($type, $messageType, $title, $message, $link, $recipientIds, $senderId, $subscriptionTierId) {
             $notification = MessageNotification::create([
                 'sender_id' => $senderId,
                 'type' => $type,
                 'message_type' => $messageType,
+                'subscription_tier_id' => $subscriptionTierId,
                 'title' => $title,
                 'message' => $message,
                 'recipients' => $recipientIds->values()->all(),

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\MessageNotification;
 use App\Models\User;
 use App\Services\MessageBroadcastService;
 use Illuminate\Http\Request;
@@ -10,6 +11,18 @@ use Illuminate\Support\Facades\Validator;
 
 class MessageNotificationController extends Controller
 {
+    public function index()
+    {
+        $notifications = MessageNotification::whereIn('message_type', ['announcement', 'congratulatory'])
+            ->with(['sender', 'subscriptionTier'])
+            ->latest()
+            ->paginate(30);
+
+        return response()->json([
+            'notifications' => $notifications,
+        ]);
+    }
+
     public function send(Request $request, MessageBroadcastService $broadcaster)
     {
         $validator = Validator::make($request->all(), [
@@ -43,6 +56,7 @@ class MessageNotificationController extends Controller
             link: config('app.client_url').'/messages',
             recipientIds: $recipientIds,
             senderId: $request->user()->id,
+            subscriptionTierId: $request->type === 'tier' ? $request->subscription_tier_id : null,
         );
 
         if (! $notification) {

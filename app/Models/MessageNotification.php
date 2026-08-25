@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-#[Fillable(['sender_id', 'type', 'message_type', 'title', 'message', 'recipients', 'recipient_count', 'link'])]
+#[Fillable(['sender_id', 'type', 'message_type', 'subscription_tier_id', 'title', 'message', 'recipients', 'recipient_count', 'link'])]
 class MessageNotification extends Model
 {
     /**
@@ -23,5 +23,10 @@ class MessageNotification extends Model
     public function sender(): BelongsTo
     {
         return $this->belongsTo(User::class, 'sender_id');
+    }
+
+    public function subscriptionTier(): BelongsTo
+    {
+        return $this->belongsTo(SubscriptionTier::class);
     }
 }
