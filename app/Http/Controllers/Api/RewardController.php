@@ -58,7 +58,7 @@ class RewardController extends Controller
             messageType: 'reward_delivered',
             title: 'Reward delivered',
             message: "Your \${$treasure->subscriptionTier->reward_amount} gift card for {$treasure->name} has been sent to your email.",
-            link: config('app.client_url')."/treasures/{$treasure->id}",
+            link: config('app.client_url').'/messages',
             recipientIds: collect([$user->id]),
         );
 

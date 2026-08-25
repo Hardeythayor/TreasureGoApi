@@ -142,7 +142,7 @@ class TreasureHuntController extends Controller
             messageType: 'treasure_found_self',
             title: 'You found it! 🏆',
             message: "Congratulations on finding the {$treasure->name}. Reward instructions are on the way.",
-            link: config('app.client_url')."/treasures/{$treasure->id}",
+            link: config('app.client_url').'/messages',
             recipientIds: collect([$request->user()->id]),
         );
 
@@ -157,7 +157,7 @@ class TreasureHuntController extends Controller
             messageType: 'treasure_found',
             title: 'Treasure Found',
             message: "{$treasure->name} has just been found by another hunter. Keep searching for the next one!",
-            link: config('app.client_url')."/treasures/{$treasure->id}",
+            link: config('app.client_url').'/messages',
             recipientIds: $otherSubscriberIds,
         );
 
@@ -168,7 +168,7 @@ class TreasureHuntController extends Controller
             messageType: 'treasure_found_alert',
             title: 'Treasure Found',
             message: "{$treasure->name} was found by {$request->user()->name}.",
-            link: config('app.client_url')."/treasures/{$treasure->id}",
+            link: config('app.client_url').'/messages',
             recipientIds: $adminIds,
         );
 

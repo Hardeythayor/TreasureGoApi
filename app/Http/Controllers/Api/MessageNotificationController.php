@@ -40,7 +40,7 @@ class MessageNotificationController extends Controller
             messageType: $request->message_type,
             title: $request->title,
             message: $request->message,
-            link: config('app.client_url'),
+            link: config('app.client_url').'/messages',
             recipientIds: $recipientIds,
             senderId: $request->user()->id,
         );

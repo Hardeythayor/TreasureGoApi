@@ -35,7 +35,7 @@ class NotifyExpiringSubscriptions extends Command
                 messageType: 'subscription_expiring',
                 title: 'Subscription reminder',
                 message: "Your {$subscription->subscriptionTier->name} Treasure Pass renews in 5 days.",
-                link: config('app.client_url').'/subscriptions',
+                link: config('app.client_url').'/messages',
                 recipientIds: collect([$subscription->user_id]),
             );
         }
