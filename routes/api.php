@@ -16,12 +16,16 @@ use Illuminate\Support\Facades\Route;
 
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/login', [AuthController::class, 'login']);
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword']);
+Route::post('/verify-reset-code', [AuthController::class, 'verifyResetCode']);
+Route::post('/reset-password', [AuthController::class, 'resetPassword']);
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::post('/logout', [AuthController::class, 'logout']);
     Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
     Route::post('/email/resend', [AuthController::class, 'resendVerificationCode']);
     Route::put('/profile', [AuthController::class, 'updateProfile']);
+    Route::put('/change-password', [AuthController::class, 'changePassword']);
     Route::post('/contact-us', [ContactUsController::class, 'send']);
 
     Route::middleware('verified')->group(function () {
@@ -80,6 +84,7 @@ Route::middleware('auth:sanctum')->group(function () {
                 Route::put('/{user}', [UserController::class, 'update']);
                 Route::delete('/{user}', [UserController::class, 'destroy']);
                 Route::patch('/{user}/toggle-status', [UserController::class, 'toggleStatus']);
+                Route::post('/{user}/reset-password', [UserController::class, 'resetPassword']);
             });
 
             Route::post('admin/rewards', [RewardController::class, 'send']);

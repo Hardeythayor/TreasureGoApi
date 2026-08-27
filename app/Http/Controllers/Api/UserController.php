@@ -4,7 +4,10 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\User;
+use App\Notifications\AdminPasswordResetNotification;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Validation\Rule;
 
@@ -105,6 +108,19 @@ class UserController extends Controller
         return response()->json([
             'user' => $this->formatUser($user),
         ]);
+    }
+
+    public function resetPassword(User $user)
+    {
+        $newPassword = Str::password(12);
+
+        $user->update(['password' => Hash::make($newPassword)]);
+
+        $user->tokens()->delete();
+
+        $user->notify(new AdminPasswordResetNotification($newPassword));
+
+        return response()->json(['message' => 'Password reset. The user has been emailed their new password.']);
     }
 
     private function formatUser(User $user): array

@@ -6,11 +6,13 @@ use App\Http\Controllers\Controller;
 use App\Models\TreasureHunt;
 use App\Models\User;
 use App\Models\UserTierSubscription;
+use App\Notifications\PasswordResetCodeNotification;
 use App\Notifications\VerifyEmailCode;
 use Illuminate\Auth\AuthenticationException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Validator;
+use Illuminate\Support\Str;
 use Illuminate\Validation\Rule;
 
 class AuthController extends Controller
@@ -114,6 +116,128 @@ class AuthController extends Controller
                 : 'Profile updated successfully.',
             'user' => $this->formatUser($user),
         ]);
+    }
+
+    public function changePassword(Request $request)
+    {
+        $user = $request->user();
+
+        $validator = Validator::make($request->all(), [
+            'current_password' => ['required', 'string'],
+            'new_password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        if (! Hash::check($request->current_password, $user->password)) {
+            return response()->json(['message' => 'Your current password is incorrect.'], 422);
+        }
+
+        $user->update(['password' => Hash::make($request->new_password)]);
+
+        $user->tokens()->where('id', '!=', $request->user()->currentAccessToken()->id)->delete();
+
+        return response()->json(['message' => 'Password changed successfully.']);
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if ($user) {
+            $code = str_pad((string) random_int(0, 999999), 6, '0', STR_PAD_LEFT);
+
+            $user->forceFill([
+                'password_reset_code' => $code,
+                'password_reset_code_expires_at' => now()->addMinutes(10),
+            ])->save();
+
+            $user->notify(new PasswordResetCodeNotification($code));
+        }
+
+        return response()->json(['message' => 'If that email address is registered, a password reset code has been sent to it.']);
+    }
+
+    public function verifyResetCode(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email'],
+            'code' => ['required', 'string', 'size:6'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (
+            ! $user
+            || $user->password_reset_code !== $request->code
+            || $user->password_reset_code_expires_at === null
+            || $user->password_reset_code_expires_at->isPast()
+        ) {
+            return response()->json(['message' => 'The password reset code is invalid or has expired.'], 422);
+        }
+
+        // Exchange the one-time code for a longer, unguessable reset token so
+        // resetPassword() doesn't need to re-check the 6-digit code itself.
+        $resetToken = Str::random(60);
+
+        $user->forceFill([
+            'password_reset_code' => $resetToken,
+            'password_reset_code_expires_at' => now()->addMinutes(10),
+        ])->save();
+
+        return response()->json([
+            'message' => 'Code verified.',
+            'reset_token' => $resetToken,
+        ]);
+    }
+
+    public function resetPassword(Request $request)
+    {
+        $validator = Validator::make($request->all(), [
+            'email' => ['required', 'string', 'email'],
+            'reset_token' => ['required', 'string'],
+            'password' => ['required', 'string', 'min:8', 'confirmed'],
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json(['errors' => $validator->errors()], 422);
+        }
+
+        $user = User::where('email', $request->email)->first();
+
+        if (
+            ! $user
+            || $user->password_reset_code !== $request->reset_token
+            || $user->password_reset_code_expires_at === null
+            || $user->password_reset_code_expires_at->isPast()
+        ) {
+            return response()->json(['message' => 'This password reset session is invalid or has expired.'], 422);
+        }
+
+        $user->update(['password' => Hash::make($request->password)]);
+
+        $user->forceFill([
+            'password_reset_code' => null,
+            'password_reset_code_expires_at' => null,
+        ])->save();
+
+        $user->tokens()->delete();
+
+        return response()->json(['message' => 'Password reset successfully. Please log in with your new password.']);
     }
 
     private function formatUser(User $user): array
