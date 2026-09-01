@@ -89,4 +89,38 @@ class UserTierSubscriptionController extends Controller
             'subscription' => $subscription,
         ]);
     }
+
+    public function analytics()
+    {
+        // "Subscribers" = subscriptions that ever successfully activated
+        // (includes free-tier, which activates without payment). "Revenue"
+        // is only counted from actually-confirmed (approved) transactions,
+        // so free-tier subscriptions correctly contribute 0 revenue.
+        $subscribersByTier = UserTierSubscription::whereIn('status', ['active', 'expired'])
+            ->selectRaw('subscription_tier_id, COUNT(*) as subscribers')
+            ->groupBy('subscription_tier_id')
+            ->pluck('subscribers', 'subscription_tier_id');
+
+        $revenueByTier = SubscriptionTierTransaction::query()
+            ->join('user_tier_subscriptions', 'user_tier_subscriptions.id', '=', 'subscription_tier_transactions.subscription_id')
+            ->where('subscription_tier_transactions.status', 'approved')
+            ->selectRaw('user_tier_subscriptions.subscription_tier_id, SUM(subscription_tier_transactions.amount) as revenue')
+            ->groupBy('user_tier_subscriptions.subscription_tier_id')
+            ->pluck('revenue', 'subscription_tier_id');
+
+        $byTier = SubscriptionTier::all(['id', 'name'])->map(function ($tier) use ($subscribersByTier, $revenueByTier) {
+            return [
+                'tier_id' => $tier->id,
+                'tier_name' => $tier->name,
+                'subscribers' => (int) ($subscribersByTier[$tier->id] ?? 0),
+                'revenue' => round((float) ($revenueByTier[$tier->id] ?? 0), 2),
+            ];
+        });
+
+        return response()->json([
+            'total_revenue' => round($byTier->sum('revenue'), 2),
+            'total_subscribers' => $byTier->sum('subscribers'),
+            'by_tier' => $byTier->values(),
+        ]);
+    }
 }

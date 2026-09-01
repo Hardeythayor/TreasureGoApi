@@ -96,6 +96,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
             Route::get('admin/messages', [MessageNotificationController::class, 'index']);
             Route::post('admin/messages', [MessageNotificationController::class, 'send']);
+
+            Route::get('admin/subscriptions/analytics', [UserTierSubscriptionController::class, 'analytics']);
         });
     });
 });
