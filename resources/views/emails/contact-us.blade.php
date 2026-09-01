@@ -11,7 +11,7 @@
                 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; padding:32px; max-width:600px;">
                     <tr>
                         <td align="center" style="padding-bottom:24px;">
-                            <img src="{{ config('app.url') }}/assets/splash_white.png" alt="{{ config('app.name') }}" style="max-height:56px;">
+                            <img src="{{ config('app.url') }}/assets/splash_white.png?v={{ file_exists(public_path('assets/splash_white.png')) ? filemtime(public_path('assets/splash_white.png')) : 1 }}" alt="{{ config('app.name') }}" style="max-height:56px;">
                         </td>
                     </tr>
                     <tr>
