@@ -10,6 +10,11 @@
             <td align="center">
                 <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color:#ffffff; border-radius:8px; padding:32px; max-width:600px;">
                     <tr>
+                        <td align="center" style="padding-bottom:24px;">
+                            <img src="{{ config('app.url') }}/assets/splash_white.png" alt="{{ config('app.name') }}" style="max-height:56px;">
+                        </td>
+                    </tr>
+                    <tr>
                         <td style="font-size:20px; font-weight:600; color:#111827; padding-bottom:16px;">
                             New Contact Us Message
                         </td>
