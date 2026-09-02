@@ -16,6 +16,7 @@ class SubscriptionTierTransaction extends Model
     protected function casts(): array
     {
         return [
+            'subscription_id' => 'integer',
             'raw_response' => 'array',
         ];
     }

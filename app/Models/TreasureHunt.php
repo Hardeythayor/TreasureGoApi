@@ -15,6 +15,8 @@ class TreasureHunt extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'treasure_id' => 'integer',
             'found_at' => 'datetime',
             'rewarded_at' => 'datetime',
         ];

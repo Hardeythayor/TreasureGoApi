@@ -15,6 +15,7 @@ class Treasure extends Model
     protected function casts(): array
     {
         return [
+            'subscription_tier_id' => 'integer',
             'location' => 'array',
         ];
     }

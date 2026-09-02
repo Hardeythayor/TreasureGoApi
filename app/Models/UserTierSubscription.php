@@ -16,6 +16,8 @@ class UserTierSubscription extends Model
     protected function casts(): array
     {
         return [
+            'user_id' => 'integer',
+            'subscription_tier_id' => 'integer',
             'subscribed_on' => 'datetime',
         ];
     }

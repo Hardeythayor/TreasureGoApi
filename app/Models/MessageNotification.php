@@ -15,6 +15,8 @@ class MessageNotification extends Model
     protected function casts(): array
     {
         return [
+            'sender_id' => 'integer',
+            'subscription_tier_id' => 'integer',
             'recipients' => 'array',
             'recipient_count' => 'integer',
         ];
