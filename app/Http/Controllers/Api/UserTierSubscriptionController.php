@@ -28,6 +28,10 @@ class UserTierSubscriptionController extends Controller
             return response()->json(['message' => 'This subscription tier is not available.'], 422);
         }
 
+        if ($tier->type === 'free') {
+            return response()->json(['message' => 'This tier is free and does not require a subscription.'], 422);
+        }
+
         $existing = UserTierSubscription::where('user_id', $request->user()->id)
             ->where('subscription_tier_id', $tier->id)
             ->whereIn('status', ['pending', 'active'])
@@ -52,15 +56,6 @@ class UserTierSubscriptionController extends Controller
                     'user_id' => $request->user()->id,
                     'subscription_tier_id' => $tier->id,
                 ]);
-            }
-
-            if ($tier->type === 'free') {
-                $subscription->update([
-                    'status' => 'active',
-                    'subscribed_on' => now(),
-                ]);
-
-                return [$subscription, null];
             }
 
             $transaction = SubscriptionTierTransaction::create([
@@ -92,10 +87,9 @@ class UserTierSubscriptionController extends Controller
 
     public function analytics()
     {
-        // "Subscribers" = subscriptions that ever successfully activated
-        // (includes free-tier, which activates without payment). "Revenue"
-        // is only counted from actually-confirmed (approved) transactions,
-        // so free-tier subscriptions correctly contribute 0 revenue.
+        // "Subscribers" = subscriptions that ever successfully activated.
+        // "Revenue" is only counted from actually-confirmed (approved)
+        // transactions.
         $subscribersByTier = UserTierSubscription::whereIn('status', ['active', 'expired'])
             ->selectRaw('subscription_tier_id, COUNT(*) as subscribers')
             ->groupBy('subscription_tier_id')
