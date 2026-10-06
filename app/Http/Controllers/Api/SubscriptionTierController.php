@@ -61,10 +61,10 @@ class SubscriptionTierController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['required', 'string', 'max:255'],
-            'amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
-            'reward_amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
-            'validity' => ['required', 'integer', 'min:1'],
             'type' => ['sometimes', 'string', 'in:free,premium'],
+            'amount' => ['required_unless:type,free', 'nullable', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'reward_amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'validity' => ['required_unless:type,free', 'nullable', 'integer', 'min:1'],
             'status' => ['sometimes', 'string', 'in:active,inactive'],
         ]);
 
@@ -72,7 +72,14 @@ class SubscriptionTierController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $subscriptionTier = SubscriptionTier::create($validator->validated());
+        $data = $validator->validated();
+
+        if (($data['type'] ?? 'premium') === 'free') {
+            $data['amount'] = null;
+            $data['validity'] = null;
+        }
+
+        $subscriptionTier = SubscriptionTier::create($data);
 
         return response()->json([
             'subscription_tier' => $subscriptionTier,
@@ -90,10 +97,10 @@ class SubscriptionTierController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'name' => ['sometimes', 'string', 'max:255'],
-            'amount' => ['sometimes', 'regex:/^\d+(\.\d{1,2})?$/'],
-            'reward_amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
-            'validity' => ['sometimes', 'integer', 'min:1'],
             'type' => ['sometimes', 'string', 'in:free,premium'],
+            'amount' => ['sometimes', 'nullable', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'reward_amount' => ['required', 'regex:/^\d+(\.\d{1,2})?$/'],
+            'validity' => ['sometimes', 'nullable', 'integer', 'min:1'],
             'status' => ['sometimes', 'string', 'in:active,inactive'],
         ]);
 
@@ -101,7 +108,31 @@ class SubscriptionTierController extends Controller
             return response()->json(['errors' => $validator->errors()], 422);
         }
 
-        $subscriptionTier->update($validator->validated());
+        $data = $validator->validated();
+
+        $effectiveType = $data['type'] ?? $subscriptionTier->type;
+
+        if ($effectiveType === 'free') {
+            $data['amount'] = null;
+            $data['validity'] = null;
+        } else {
+            $effectiveAmount = array_key_exists('amount', $data) ? $data['amount'] : $subscriptionTier->amount;
+            $effectiveValidity = array_key_exists('validity', $data) ? $data['validity'] : $subscriptionTier->validity;
+
+            $errors = [];
+            if ($effectiveAmount === null) {
+                $errors['amount'] = ['The amount field is required for a premium tier.'];
+            }
+            if ($effectiveValidity === null) {
+                $errors['validity'] = ['The validity field is required for a premium tier.'];
+            }
+
+            if (! empty($errors)) {
+                return response()->json(['errors' => $errors], 422);
+            }
+        }
+
+        $subscriptionTier->update($data);
 
         return response()->json([
             'subscription_tier' => $subscriptionTier,

@@ -20,7 +20,9 @@ class NotifyExpiringSubscriptions extends Command
         $subscriptions = UserTierSubscription::query()
             ->join('subscription_tiers', 'subscription_tiers.id', '=', 'user_tier_subscriptions.subscription_tier_id')
             ->where('user_tier_subscriptions.status', 'active')
+            ->where('subscription_tiers.type', 'premium')
             ->whereNotNull('user_tier_subscriptions.subscribed_on')
+            ->whereNotNull('subscription_tiers.validity')
             ->whereRaw(
                 'DATE(DATE_ADD(user_tier_subscriptions.subscribed_on, INTERVAL subscription_tiers.validity DAY)) = ?',
                 [now()->addDays(5)->toDateString()]
